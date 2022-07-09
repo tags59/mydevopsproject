@@ -1,0 +1,38 @@
+---
+- hosts: webservers
+  become: yes
+
+  tasks:
+  - name: Download jenkins release
+    get_url:
+      dest: /etc/yum.repos.d/jenkins.repo
+      url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+
+  - name: Import jenkins key from url
+    ansible.builtin.rpm_key:
+      key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+      state: present
+
+  - name: Update all packages
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Install java
+    yum:
+      name: java-11-openjdk-devel
+      state: present
+
+  - name: Install jenkins
+    yum:
+      name: jenkins
+      state: latest
+
+  - name: daemon-reload to pick up config changes
+    ansible.builtin.systemd:
+      daemon_reload: yes
+
+  - name: Start jenkins
+    ansible.builtin.systemd:
+      name: jenkins
+      state: started
