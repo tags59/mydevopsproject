@@ -1,0 +1,23 @@
+---
+
+- hosts: webservers
+  become: true
+  vars: 
+   pkg_name: apache2
+  vars_prompt: 
+  - name: dest_path
+    prompt: Enter the destination path here
+    private: false
+  tasks:
+          - name: Update apt repo on the host
+            command: apt update -y
+          - name: Install {{pkg_name}} package
+            apt: name={{pkg_name}} state=present
+          - name: Start {{pkg_name}} service
+            service: name={{pkg_name}} state=started
+          - name: Copy a file index.html onto {{pkg_name}}
+            copy: src=index.html  dest={{dest_path}}
+            notify: restart {{pkg_name}} service
+  handlers:
+          - name: restart {{pkg_name}} service
+            service: name={{pkg_name}} state=restarted
